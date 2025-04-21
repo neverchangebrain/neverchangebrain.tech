@@ -6,39 +6,39 @@ import Form, { FormShell } from "@/app/guestbook/components/form"
 import { Heading } from "@/components/heading"
 
 export const metadata = {
-   title: "Guestbook - Nazar",
-   description: "Guestbook where visitors can leave a comment by signing.",
+  title: "Guestbook - Nazar",
+  description: "Guestbook where visitors can leave a comment by signing.",
 }
 
 export default async function GuestbookPage() {
-   const session = await auth()
-   const isLoggedIn = session?.user?.email
+  const session = await auth()
+  const isLoggedIn = session?.user?.email
 
-   const entries = await getGuestbookEntries()
+  const entries = await getGuestbookEntries()
 
-   return (
-      <section>
-         <Heading>
-            {isLoggedIn && (
-               <>
-                  <span>Hi {session.user?.name} 👋 </span> <br />
-               </>
-            )}
-            Leave a mark by signing my guestbook
-         </Heading>
+  return (
+    <section>
+      <Heading>
+        {isLoggedIn && (
+          <>
+            <span>Hi {session.user?.name} 👋 </span> <br />
+          </>
+        )}
+        Leave a mark by signing my guestbook
+      </Heading>
 
-         <FormShell>
-            {isLoggedIn ? (
-               <>
-                  <Form />
-                  <SignOut />
-               </>
-            ) : (
-               <SignIn />
-            )}
-         </FormShell>
+      <FormShell>
+        {isLoggedIn ? (
+          <>
+            <Form />
+            <SignOut />
+          </>
+        ) : (
+          <SignIn />
+        )}
+      </FormShell>
 
-         <Entries entries={entries} />
-      </section>
-   )
+      <Entries entries={entries} />
+    </section>
+  )
 }

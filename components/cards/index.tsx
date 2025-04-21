@@ -1,16 +1,16 @@
 import { getGithubContributions, getGithubStats } from "@/app/actions"
-import { TelegramCard } from "@/components/cards/telegram"
 import { GithubStatsCard } from "@/components/cards/github"
-import { GitlabCard } from "@/components/cards/gitlab"
 import { LocationCard } from "@/components/cards/location"
 import { MeCard } from "@/components/cards/me"
 import { TimeCard } from "@/components/cards/time"
 import { Motion } from "@/components/motion"
+import { TelegramCard } from "@/components/cards/telegram"
+import { LoveManagerCard } from "@/components/cards/love"
 
 export async function Cards() {
   const { followers, stars } = await getGithubStats()
   const contributions = await getGithubContributions()
-  
+
   return (
     <Motion
       asChild
@@ -28,9 +28,9 @@ export async function Cards() {
           stars={stars}
           contributions={contributions}
         />
-        <TelegramCard />
         <LocationCard />
-        <GitlabCard />
+        <TelegramCard />
+        <LoveManagerCard />
         <TimeCard />
       </section>
     </Motion>

@@ -1,0 +1,6 @@
+{
+  "databaseURL": "https://Nazar-s-workspace-n9nt8o.eu-central-1.xata.sh/db/site",
+  "codegen": {
+    "output": "src/xata.ts"
+  }
+}

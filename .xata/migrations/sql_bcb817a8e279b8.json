@@ -1,0 +1,18 @@
+{
+  "done": true,
+  "migration": {
+    "name": "sql_bcb817a8e279b8",
+    "operations": [
+      {
+        "sql": {
+          "up": "CREATE TABLE IF NOT EXISTS guestbook (id serial PRIMARY KEY NOT NULL, email text, body text, \"createdBy\" text, \"createdAt\" timestamp DEFAULT now() NOT NULL)"
+        }
+      }
+    ]
+  },
+  "migrationType": "inferred",
+  "name": "sql_bcb817a8e279b8",
+  "parent": "mig_d036uomo1ogctn5qm7dg",
+  "schema": "public",
+  "startedAt": "2025-04-21T16:17:04.706349Z"
+}

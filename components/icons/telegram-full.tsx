@@ -1,10 +1,10 @@
 import React from "react"
 
-export function TelegramIcon(props: React.SVGProps<SVGSVGElement>) {
+export function TelegramFullIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="76"
+      width="55"
       height="30"
       viewBox="0 0 220 193"
       fill="none"

@@ -1,7 +1,5 @@
 import NextAuth from "next-auth"
 import GitHub from "next-auth/providers/github"
-import GitLab from "next-auth/providers/gitlab"
-import { env } from "@/app/env"
 
 export const {
   handlers: { GET, POST },
@@ -9,5 +7,5 @@ export const {
   signIn,
   signOut,
 } = NextAuth({
-  providers: [GitHub, GitLab],
+  providers: [GitHub],
 })

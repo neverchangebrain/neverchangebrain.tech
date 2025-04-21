@@ -2,78 +2,59 @@
 
 import { octokit } from "@/lib/octokit"
 
-interface GithubStats {
-  user: {
-    repositoriesContributedTo: { totalCount: number }
-    pullRequests: { totalCount: number }
-    openIssues: { totalCount: number }
-    closedIssues: { totalCount: number }
-    followers: { totalCount: number }
-    repositories: {
-      totalCount: number
-      nodes: {
-        stargazers: { totalCount: number }
-      }[]
-      pageInfo: {
-        hasNextPage: boolean
-        endCursor: string | null
-      }
-    }
-  }
-}
-
-interface GithubContributions {
-  user: {
-    contributionsCollection: {
-      contributionCalendar: {
-        totalContributions: number
-        weeks: {
-          contributionDays: {
-            color: string
-            contributionCount: number
-            date: string
-          }[]
-        }[]
-      }
-    }
-  }
-}
-
 export async function getGithubStats() {
-  const { user } = await octokit.graphql<GithubStats>(
-    String.raw`
-        query ($login: String!) {
-            user(login: $login) {
-                pullRequests(first: 1) {
-                    totalCount
-                }
-                openIssues: issues(states: OPEN) {
-                    totalCount
-                }
-                closedIssues: issues(states: CLOSED) {
-                    totalCount
-                }
-                followers {
-                    totalCount
-                }
-                repositories(ownerAffiliations: OWNER, first: 100) {
-                    totalCount
-                    nodes {
-                        stargazers {
-                            totalCount
-                        }
-                    }
-                    pageInfo {
-                        hasNextPage
-                        endCursor
-                    }
-                }
-            }
+  const gql = String.raw
+  const { user } = await octokit.graphql<{
+    user: {
+      repositoriesContributedTo: { totalCount: number }
+      pullRequests: { totalCount: number }
+      openIssues: { totalCount: number }
+      closedIssues: { totalCount: number }
+      followers: { totalCount: number }
+      repositories: {
+        totalCount: number
+        nodes: {
+          stargazers: { totalCount: number }
+        }[]
+        pageInfo: {
+          hasNextPage: boolean
+          endCursor: string | null
         }
+      }
+    }
+  }>(
+    gql`
+      query ($login: String!) {
+        user(login: $login) {
+          pullRequests(first: 1) {
+            totalCount
+          }
+          openIssues: issues(states: OPEN) {
+            totalCount
+          }
+          closedIssues: issues(states: CLOSED) {
+            totalCount
+          }
+          followers {
+            totalCount
+          }
+          repositories(ownerAffiliations: OWNER, first: 100) {
+            totalCount
+            nodes {
+              stargazers {
+                totalCount
+              }
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
+        }
+      }
     `,
     { login: "neverchangebrain" },
   )
-  
   return {
     issues: user.closedIssues.totalCount + user.openIssues.totalCount,
     prs: user.pullRequests.totalCount,
@@ -86,33 +67,49 @@ export async function getGithubStats() {
 }
 
 export async function getGithubContributions() {
-  const { user } = await octokit.graphql<GithubContributions>(
-    String.raw`
-        query ($login: String!) {
-            user(login: $login) {
-                contributionsCollection {
-                    contributionCalendar {
-                        totalContributions
-                        weeks {
-                            contributionDays {
-                                color
-                                contributionCount
-                                date
-                            }
-                        }
-                    }
-                }
-            }
+  const gql = String.raw
+  const { user } = await octokit.graphql<{
+    user: {
+      contributionsCollection: {
+        contributionCalendar: {
+          totalContributions: number
+          weeks: {
+            contributionDays: {
+              color: string
+              contributionCount: number
+              date: string
+            }[]
+          }[]
         }
+      }
+    }
+  }>(
+    gql`
+      query ($login: String!) {
+        user(login: $login) {
+          contributionsCollection {
+            contributionCalendar {
+              totalContributions
+              weeks {
+                contributionDays {
+                  color
+                  contributionCount
+                  date
+                }
+              }
+            }
+          }
+        }
+      }
     `,
     { login: "neverchangebrain" },
   )
-  
+
   const weeklyContributions =
     user.contributionsCollection.contributionCalendar.weeks
-  
+
   let maxContributionDay = { contributionCount: 0, date: "", color: "" }
-  
+
   for (let week of weeklyContributions) {
     for (let day of week.contributionDays) {
       if (day.contributionCount > maxContributionDay.contributionCount) {

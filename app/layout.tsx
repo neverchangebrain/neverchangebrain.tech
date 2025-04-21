@@ -7,15 +7,14 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 import type { Metadata } from "next"
 import { Epilogue } from "next/font/google"
 import "./globals.css"
-import React from "react"
 
 const epilogue = Epilogue({ subsets: ["latin"] })
 
 const metainfo = {
   name: "Nazar",
-  description: "Software and Backend developer from Kiev, Ukraine.",
+  description: "Backend developer from Ukraine, Kiev.",
   url: "https://neverchangebrain.space",
-  image: "/meta/meta.png"
+  twitter: "@theomendev",
 }
 
 export const metadata: Metadata = {
@@ -32,8 +31,13 @@ export const metadata: Metadata = {
     url: metainfo.url,
     title: metainfo.name,
     description: metainfo.description,
-    images: metainfo.image,
-  }
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: metainfo.name,
+    description: metainfo.description,
+    creator: metainfo.twitter,
+  },
 }
 
 export default function RootLayout({

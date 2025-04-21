@@ -6,7 +6,7 @@ jiti("./app/env")
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-   reactStrictMode: true,
+  reactStrictMode: true,
 }
 
 export default nextConfig

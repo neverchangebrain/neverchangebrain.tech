@@ -10,7 +10,6 @@ export const {
 } = NextAuth({
   providers: [
     GitHub({
-      token: env.GITHUB_TOKEN,
       clientId: env.AUTH_GITHUB_ID,
       clientSecret: env.AUTH_GITHUB_SECRET,
     }),

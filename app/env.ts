@@ -9,6 +9,7 @@ export const env = createEnv({
     WAKATIME_API_KEY: z.string(),
     DATABASE_URL: z.string().url(),
     RESEND_API_KEY: z.string(),
+    NEXTAUTH_SECRET: z.string(),
   },
   experimental__runtimeEnv: {
     // GITHUB_TOKEN: process.env.GITHUB_TOKEN,

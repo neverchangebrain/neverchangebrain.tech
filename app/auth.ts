@@ -14,4 +14,5 @@ export const {
       clientSecret: env.AUTH_GITHUB_SECRET,
     }),
   ],
+  secret: env.NEXTAUTH_SECRET,
 })

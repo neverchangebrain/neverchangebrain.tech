@@ -7,7 +7,7 @@ export function Footer() {
         © {new Date().getFullYear()} - All rights reserved.
       </p>
       <a
-        href="https://stopwarinukraine.com/"
+        href="https://www.swufoundation.org/"
         rel="noopener noreferrer"
         target="_blank"
         className="flex items-center gap-2 text-sm text-neutral-700 hover:opacity-75 dark:text-neutral-50"

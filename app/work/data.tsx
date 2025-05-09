@@ -9,7 +9,7 @@ export type Job = {
 
 export const assisterr: Job = {
   company: "Assisterr",
-  position: "Backend Developer",
+  position: "Backend/Bot Service Developer",
   introDescription: (
     <>
       I joined the <a href="https://assisterr.ai">Assisterr</a> team to help

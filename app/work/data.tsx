@@ -14,11 +14,6 @@ export const assisterr: Job = {
     <>
       I joined the <a href="https://assisterr.ai">Assisterr</a> team to help
       build a automation, accessibility and uniqueness in the product.
-      <br />
-      <span className="mt-4 block">
-        At the moment, the idea is to expand the capabilities across social
-        platforms.
-      </span>
     </>
   ),
   from: "2021",

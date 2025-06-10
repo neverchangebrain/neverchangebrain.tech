@@ -7,9 +7,22 @@ export type Job = {
   to: string
 }
 
+export const insiderTeam: Job = {
+  company: "Insider Team",
+  position: "Backend Developer",
+  introDescription: (
+    <>
+      I joined the <a href="https://www.insiders.software">Insider Team</a> to develop
+      my experience and work on various projects as part of a team.
+    </>
+  ),
+  from: "2025",
+  to: "*",
+}
+
 export const assisterr: Job = {
   company: "Assisterr",
-  position: "Backend/Bot Service Developer",
+  position: "Backend/Service Developer",
   introDescription: (
     <>
       I joined the <a href="https://assisterr.ai">Assisterr</a> team to help

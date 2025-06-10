@@ -1,13 +1,13 @@
 "use client"
 
-import { assisterr, type Job } from "@/app/work/data"
+import { assisterr, insiderTeam, type Job } from "@/app/work/data"
 import { defaultVariantsNoDelay } from "@/components/motion.variants"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { AnimatePresence, MotionProps, motion } from "framer-motion"
 import React from "react"
 
-const jobs: Job[] = [assisterr]
+const jobs: Job[] = [assisterr, insiderTeam]
 
 export function Jobs() {
   return (

@@ -15,7 +15,9 @@ export default function Home() {
           <Link href={"/work"}>
             <span className="text-neutral-400">/</span>work,
           </Link>{" "}
-          also looking for a new job for a backend developer position
+          as a backend developer at{" "}
+          <a href="https://www.insiders.software">Insiders</a> - a startup working with
+          international projects of any type.
         </Text>
       </section>
 

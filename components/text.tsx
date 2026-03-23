@@ -5,12 +5,25 @@ import { cn } from "@/lib/utils"
 import { Slot } from "@radix-ui/react-slot"
 import { MotionProps, motion } from "framer-motion"
 
-type TextProps = {
+const MotionSlot = motion.create(Slot)
+
+type BaseTextProps = {
   children: React.ReactNode
   className?: string
   asChild?: boolean
-  hasMotion?: boolean
-} & MotionProps
+}
+
+type MotionTextProps = BaseTextProps &
+  MotionProps & {
+    hasMotion?: true
+  }
+
+type StaticTextProps = BaseTextProps &
+  React.ComponentPropsWithoutRef<"p"> & {
+    hasMotion: false
+  }
+
+type TextProps = MotionTextProps | StaticTextProps
 
 export function Text({
   children,
@@ -19,17 +32,51 @@ export function Text({
   hasMotion = true,
   ...props
 }: TextProps) {
-  const BaseComp = asChild ? Slot : "p"
-  const Comp = hasMotion ? motion.create(BaseComp) : BaseComp
+  if (asChild) {
+    if (hasMotion) {
+      return (
+        <MotionSlot
+          initial="hidden"
+          animate="visible"
+          exit="hidden"
+          variants={defaultVariants}
+          className={cn("text-base font-normal leading-relaxed", className)}
+          {...(props as MotionProps)}
+        >
+          {children}
+        </MotionSlot>
+      )
+    }
+
+    return (
+      <Slot className={cn("text-base font-normal leading-relaxed", className)}>
+        {children}
+      </Slot>
+    )
+  }
+
+  if (hasMotion) {
+    return (
+      <motion.p
+        initial="hidden"
+        animate="visible"
+        exit="hidden"
+        variants={defaultVariants}
+        className={cn("text-base font-normal leading-relaxed", className)}
+        {...(props as MotionProps)}
+      >
+        {children}
+      </motion.p>
+    )
+  }
+
+  const staticProps = props as React.ComponentPropsWithoutRef<"p">
   return (
-    <Comp
-      initial="hidden"
-      animate="visible"
-      exit="hidden"
-      variants={defaultVariants}
+    <p
       className={cn("text-base font-normal leading-relaxed", className)}
+      {...staticProps}
     >
       {children}
-    </Comp>
+    </p>
   )
 }

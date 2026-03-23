@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils"
 import { Slot } from "@radix-ui/react-slot"
 import { motion } from "framer-motion"
 
+const MotionSlot = motion.create(Slot)
+
 type HeadingProps = {
   children: React.ReactNode
   className?: string
@@ -19,10 +21,53 @@ export function Heading({
   hasMotion = true,
   ...props
 }: HeadingProps) {
-  const BaseComp = asChild ? Slot : "h1"
-  const Comp = hasMotion ? motion.create(BaseComp) : BaseComp
+  if (asChild) {
+    if (hasMotion) {
+      return (
+        <MotionSlot
+          initial="hidden"
+          animate="visible"
+          exit="hidden"
+          variants={defaultVariants}
+          className={cn(
+            "text-2xl font-medium leading-relaxed dark:text-white",
+            className,
+          )}
+          {...(props as any)}
+        >
+          {children}
+        </MotionSlot>
+      )
+    }
+
+    return (
+      <Slot
+        className={cn(
+          "text-2xl font-medium leading-relaxed dark:text-white",
+          className,
+        )}
+      >
+        {children}
+      </Slot>
+    )
+  }
+
+  if (!hasMotion) {
+    return (
+      <h1
+        className={cn(
+          "text-2xl font-medium leading-relaxed dark:text-white",
+          className,
+        )}
+        {...(props as any)}
+      >
+        {children}
+      </h1>
+    )
+  }
+
   return (
-    <Comp
+    <motion.h1
       initial="hidden"
       animate="visible"
       exit="hidden"
@@ -31,9 +76,9 @@ export function Heading({
         "text-2xl font-medium leading-relaxed dark:text-white",
         className,
       )}
-      {...props}
+      {...(props as any)}
     >
       {children}
-    </Comp>
+    </motion.h1>
   )
 }

@@ -1,5 +1,9 @@
-import "@/lib/config"
-import { drizzle } from "drizzle-orm/xata-http"
-import { getXataClient } from "./xata"
+import '@/lib/config';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
 
-export const db = drizzle(getXataClient())
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+export const db = drizzle(pool);

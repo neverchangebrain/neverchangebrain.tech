@@ -1,15 +1,15 @@
-import { getGithubContributions, getGithubStats } from "@/app/actions"
-import { GithubStatsCard } from "@/components/cards/github"
-import { LocationCard } from "@/components/cards/location"
-import { MeCard } from "@/components/cards/me"
-import { TimeCard } from "@/components/cards/time"
-import { Motion } from "@/components/motion"
-import { TelegramCard } from "@/components/cards/telegram"
-import { LoveManagerCard } from "@/components/cards/love"
+import { getGithubContributions, getGithubStats } from '@/app/actions';
+import { GithubStatsCard } from '@/components/cards/github';
+import { LocationCard } from '@/components/cards/location';
+import { MeCard } from '@/components/cards/me';
+import { TimeCard } from '@/components/cards/time';
+import { Motion } from '@/components/motion';
+import { TelegramCard } from '@/components/cards/telegram';
+import { EmailCard } from '@/components/cards/email';
 
 export async function Cards() {
-  const { followers, stars } = await getGithubStats()
-  const contributions = await getGithubContributions()
+  const { followers, stars } = await getGithubStats();
+  const contributions = await getGithubContributions();
 
   return (
     <Motion
@@ -23,16 +23,12 @@ export async function Cards() {
     >
       <section className="mt-8 grid grid-cols-8 grid-rows-5 gap-4 md:grid-cols-7 md:grid-rows-3">
         <MeCard />
-        <GithubStatsCard
-          followers={followers}
-          stars={stars}
-          contributions={contributions}
-        />
+        <GithubStatsCard followers={followers} stars={stars} contributions={contributions} />
         <LocationCard />
         <TelegramCard />
-        <LoveManagerCard />
+        <EmailCard />
         <TimeCard />
       </section>
     </Motion>
-  )
+  );
 }

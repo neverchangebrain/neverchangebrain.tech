@@ -1,26 +1,28 @@
-"use client"
+'use client';
 
-import { getGithubContributions } from "@/app/actions"
-import { contributionsColorMap } from "@/components/cards/constants"
-import { defaultVariantsNoDelay } from "@/components/motion.variants"
-import { cn } from "@/lib/utils"
-import { motion } from "framer-motion"
-import { Github } from "lucide-react"
-import Link from "next/link"
+import { getGithubContributions } from '@/app/actions';
+import { contributionsColorMap } from '@/components/cards/constants';
+import { defaultVariantsNoDelay } from '@/components/motion.variants';
+import { networking } from '@/lib/constants';
+import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
+import { Github } from 'lucide-react';
+import Link from 'next/link';
+
+const MotionLink = motion.create(Link);
 
 export function GithubStatsCard({
   followers,
   stars,
   contributions,
 }: {
-  followers: number
-  stars: number
-  contributions: Awaited<ReturnType<typeof getGithubContributions>>
+  followers: number;
+  stars: number;
+  contributions: Awaited<ReturnType<typeof getGithubContributions>>;
 }) {
-  const MotionLink = motion.create(Link)
   return (
     <MotionLink
-      href="https://github.com/neverchangebrain"
+      href={`https://github.com/${networking.github}`}
       target="_blank"
       variants={defaultVariantsNoDelay}
       whileHover={{ scale: 1.05 }}
@@ -35,68 +37,61 @@ export function GithubStatsCard({
         <div className="flex flex-wrap items-end gap-4">
           <GithubStatItem label="Followers" value={followers} />
           <GithubStatItem label="Stars" value={stars} />
-          <GithubStatItem
-            label="Contributions"
-            value={contributions.totalContributions}
-          />
+          <GithubStatItem label="Contributions" value={contributions.totalContributions} />
         </div>
       </div>
 
       <ContributionsGraph contributions={contributions} />
     </MotionLink>
-  )
+  );
 }
 
 function GithubStatItem({ label, value }: { label: string; value: number }) {
   return (
     <div className="col-span-1 flex flex-col items-start">
-      <p className="text-lg font-semibold text-neutral-700 dark:text-white">
-        {value}
-      </p>
+      <p className="text-lg font-semibold text-neutral-700 dark:text-white">{value}</p>
       <p className="text-xs text-neutral-500 dark:text-neutral-400">{label}</p>
     </div>
-  )
+  );
 }
 
 function ContributionsGraph({
   contributions,
 }: {
-  contributions: Awaited<ReturnType<typeof getGithubContributions>>
+  contributions: Awaited<ReturnType<typeof getGithubContributions>>;
 }) {
   return (
-    <ul className="absolute inset-y-0 right-0 z-0 flex max-h-full gap-1 overflow-hidden opacity-50">
+    <div className="absolute inset-y-0 right-0 z-0 flex max-h-full gap-1 overflow-hidden opacity-50">
       <div className="absolute inset-0 bg-gradient-to-t from-neutral-50 via-neutral-50/50 to-neutral-50/50 dark:from-neutral-950/95 dark:via-neutral-950/65 dark:to-transparent" />
       {contributions.latestContributions.map((week, weekIndex) => {
-        if (week.contributionDays.length < 7) {
-          const days = week.contributionDays.length
-          const missingDays = 7 - days
-          for (let i = 0; i < missingDays; i++) {
-            week.contributionDays.push({
-              color: "",
+        const paddedDays = Array.from({ length: 7 }, (_, dayIndex) => {
+          return (
+            week.contributionDays[dayIndex] ?? {
+              color: '',
               contributionCount: 0,
-              date: "",
-            })
-          }
-        }
+              date: '',
+            }
+          );
+        });
         return (
-          <li
+          <div
             key={`contributions-week-${weekIndex}`}
             className="flex aspect-[1/8] size-full flex-col gap-1"
           >
-            {week.contributionDays.map((day) => {
+            {paddedDays.map((day, dayIndex) => {
               return (
                 <div
-                  key={`contribution-week-${weekIndex}-day-${day.date}`}
+                  key={`contribution-week-${weekIndex}-day-${day.date || dayIndex}`}
                   className={cn(
-                    "flex aspect-square rounded-[3px]",
+                    'flex aspect-square rounded-[3px]',
                     contributionsColorMap[day.color],
                   )}
                 />
-              )
+              );
             })}
-          </li>
-        )
+          </div>
+        );
       })}
-    </ul>
-  )
+    </div>
+  );
 }

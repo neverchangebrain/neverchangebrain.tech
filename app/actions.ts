@@ -53,7 +53,7 @@ export async function getGithubStats() {
         }
       }
     `,
-    { login: "neverchangebrain" },
+    { login: "justrawaccel" },
   )
   return {
     issues: user.closedIssues.totalCount + user.openIssues.totalCount,
@@ -102,7 +102,7 @@ export async function getGithubContributions() {
         }
       }
     `,
-    { login: "neverchangebrain" },
+    { login: "justrawaccel" },
   )
 
   const weeklyContributions =

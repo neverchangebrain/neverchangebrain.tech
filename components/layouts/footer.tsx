@@ -1,4 +1,4 @@
-import { ShieldCheck } from "lucide-react"
+import { ShieldCheck } from 'lucide-react';
 
 export function Footer() {
   return (
@@ -16,5 +16,5 @@ export function Footer() {
         Stand with Ukraine
       </a>
     </footer>
-  )
+  );
 }

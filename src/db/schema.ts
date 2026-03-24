@@ -22,6 +22,7 @@ export const channelComments = pgTable('channelComments', {
   messageId: integer('messageId')
     .notNull()
     .references(() => guestbook.id, { onDelete: 'cascade' }),
+  parentId: integer('parentId').references(() => channelComments.id, { onDelete: 'cascade' }),
   email: text('email'),
   body: text('body'),
   createdBy: text('createdBy'),

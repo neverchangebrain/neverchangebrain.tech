@@ -19,7 +19,6 @@ export const metadata = {
 export default async function ChannelAdminPage() {
   const session = await auth();
   const email = session?.user?.email;
-  console.log('session', session);
   if (!email || email !== networking.email) notFound();
 
   const threads = await getChannelThreads();
@@ -69,23 +68,7 @@ export default async function ChannelAdminPage() {
             {t.comments.length > 0 && (
               <div className="mt-4 space-y-2 border-t border-white/5 pt-4">
                 {t.comments.map((c) => (
-                  <div
-                    key={c.id}
-                    className="flex flex-wrap items-start justify-between gap-3 rounded-xl bg-neutral-200/10 px-3 py-2 text-xs dark:bg-neutral-900/10"
-                  >
-                    <div className="min-w-0 wrap-break-word">
-                      <div className="text-neutral-500 dark:text-neutral-400">
-                        #{c.id} • {c.createdBy}
-                      </div>
-                      <div className="mt-1">{c.body}</div>
-                    </div>
-                    <form action={adminDeleteChannelComment}>
-                      <input type="hidden" name="id" value={c.id} />
-                      <Button type="submit" variant="destructive" size="sm">
-                        delete
-                      </Button>
-                    </form>
-                  </div>
+                  <AdminCommentNode key={c.id} node={c} />
                 ))}
               </div>
             )}
@@ -93,5 +76,42 @@ export default async function ChannelAdminPage() {
         ))}
       </div>
     </section>
+  );
+}
+
+function AdminCommentNode({
+  node,
+  depth = 0,
+}: {
+  node: { id: number; createdBy: string | null; body: string | null; replies: any[] };
+  depth?: number;
+}) {
+  const clampedDepth = Math.min(depth, 6);
+
+  return (
+    <div style={{ marginLeft: clampedDepth * 12 }} className="space-y-2">
+      <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl bg-neutral-200/10 px-3 py-2 text-xs dark:bg-neutral-900/10">
+        <div className="min-w-0 wrap-break-word">
+          <div className="text-neutral-500 dark:text-neutral-400">
+            #{node.id} • {node.createdBy}
+          </div>
+          <div className="mt-1">{node.body}</div>
+        </div>
+        <form action={adminDeleteChannelComment}>
+          <input type="hidden" name="id" value={node.id} />
+          <Button type="submit" variant="destructive" size="sm">
+            delete
+          </Button>
+        </form>
+      </div>
+
+      {node.replies?.length > 0 && (
+        <div className="space-y-2">
+          {node.replies.map((r) => (
+            <AdminCommentNode key={r.id} node={r} depth={depth + 1} />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

@@ -123,6 +123,7 @@ export async function saveChannelMessage(formData: FormData): Promise<ActionResu
 
 export async function saveChannelComment(
   messageId: number,
+  parentCommentId: number | null,
   formData: FormData,
 ): Promise<ActionResult> {
   const session = await requireSession();
@@ -155,9 +156,23 @@ export async function saveChannelComment(
     return { success: false, message: 'Comments are closed' };
   }
 
+  if (parentCommentId) {
+    const parentRows = await db
+      .select({ id: channelComments.id, messageId: channelComments.messageId })
+      .from(channelComments)
+      .where(eq(channelComments.id, parentCommentId))
+      .limit(1);
+
+    const parent = parentRows[0];
+    if (!parent || parent.messageId !== messageId) {
+      return { success: false, message: 'Invalid parent comment' };
+    }
+  }
+
   try {
     await db.insert(channelComments).values({
       messageId,
+      parentId: parentCommentId,
       createdBy,
       email,
       body,

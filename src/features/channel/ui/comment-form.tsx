@@ -19,16 +19,18 @@ const initialState: FormState = {
 
 export function ChannelCommentForm({
   messageId,
+  parentCommentId,
   disabled,
 }: {
   messageId: number;
+  parentCommentId?: number | null;
   disabled?: boolean;
 }) {
   const ref = React.useRef<HTMLFormElement>(null);
   const [state, action] = React.useActionState<FormState, FormData>(formAction, initialState);
 
   async function formAction(_prev: FormState, formData: FormData): Promise<FormState> {
-    const res = await saveChannelComment(messageId, formData);
+    const res = await saveChannelComment(messageId, parentCommentId ?? null, formData);
     if (res.success) ref.current?.reset();
     return res;
   }

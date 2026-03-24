@@ -5,7 +5,7 @@ import { asc, desc, inArray } from 'drizzle-orm';
 import { db } from '@/db';
 import { channelComments, channelMessages } from '@/db/schema';
 
-import type { ChannelThread } from '../model/types';
+import type { ChannelComment, ChannelCommentNode, ChannelThread } from '../model/types';
 
 export async function getChannelThreads(): Promise<ChannelThread[]> {
   const messages = await db
@@ -29,6 +29,7 @@ export async function getChannelThreads(): Promise<ChannelThread[]> {
     .select({
       id: channelComments.id,
       messageId: channelComments.messageId,
+      parentId: channelComments.parentId,
       email: channelComments.email,
       body: channelComments.body,
       createdBy: channelComments.createdBy,
@@ -38,15 +39,42 @@ export async function getChannelThreads(): Promise<ChannelThread[]> {
     .where(inArray(channelComments.messageId, messageIds))
     .orderBy(asc(channelComments.createdAt));
 
-  const byMessageId = new Map<number, typeof comments>();
+  const commentsByMessageId = new Map<number, ChannelComment[]>();
   for (const c of comments) {
-    const list = byMessageId.get(c.messageId) ?? [];
+    const list = commentsByMessageId.get(c.messageId) ?? [];
     list.push(c);
-    byMessageId.set(c.messageId, list);
+    commentsByMessageId.set(c.messageId, list);
   }
 
-  return messages.map((m) => ({
-    ...m,
-    comments: byMessageId.get(m.id) ?? [],
-  }));
+  function buildTree(messageComments: ChannelComment[]): ChannelCommentNode[] {
+    const nodes = new Map<number, ChannelCommentNode>();
+
+    for (const c of messageComments) {
+      nodes.set(c.id, { ...c, replies: [] });
+    }
+
+    const roots: ChannelCommentNode[] = [];
+    for (const c of messageComments) {
+      const node = nodes.get(c.id);
+      if (!node) continue;
+
+      if (c.parentId) {
+        const parent = nodes.get(c.parentId);
+        if (parent) parent.replies.push(node);
+        else roots.push(node);
+      } else {
+        roots.push(node);
+      }
+    }
+
+    return roots;
+  }
+
+  return messages.map((m) => {
+    const messageComments = commentsByMessageId.get(m.id) ?? [];
+    return {
+      ...m,
+      comments: buildTree(messageComments),
+    };
+  });
 }

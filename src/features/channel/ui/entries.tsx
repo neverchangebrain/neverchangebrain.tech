@@ -5,10 +5,11 @@ import { networking } from '@/constants/profile';
 import { cn } from '@/lib/utils';
 import { differenceInDays } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
+import * as React from 'react';
 
 import { ChannelCommentForm } from './comment-form';
 
-import type { ChannelThread } from '../model/types';
+import type { ChannelCommentNode, ChannelThread } from '../model/types';
 
 type EntriesProps = {
   entries: ChannelThread[];
@@ -99,20 +100,14 @@ export function ChannelEntry({ entry, className, canComment }: EntryProps) {
           {comments.length > 0 && (
             <div className="space-y-2">
               {comments.map((c) => (
-                <div
+                <ChannelCommentNodeView
                   key={c.id}
-                  className="rounded-xl bg-neutral-200/10 px-3 py-2 text-xs leading-5 dark:bg-neutral-900/10"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-neutral-500 dark:text-neutral-400">{c.createdBy}</span>
-                    <span className="text-neutral-500 dark:text-neutral-400">
-                      {differenceInDays(new Date(), c.createdAt) > 0
-                        ? `${differenceInDays(new Date(), c.createdAt)}d ago`
-                        : 'today'}
-                    </span>
-                  </div>
-                  <p className="wrap-break-word">{c.body}</p>
-                </div>
+                  node={c}
+                  messageId={entry.id}
+                  canReply={canComment}
+                  commentsClosed={commentsClosed}
+                  depth={0}
+                />
               ))}
             </div>
           )}
@@ -121,5 +116,78 @@ export function ChannelEntry({ entry, className, canComment }: EntryProps) {
         </div>
       )}
     </motion.div>
+  );
+}
+
+function ChannelCommentNodeView({
+  node,
+  messageId,
+  canReply,
+  commentsClosed,
+  depth,
+}: {
+  node: ChannelCommentNode;
+  messageId: number;
+  canReply: boolean;
+  commentsClosed: boolean;
+  depth: number;
+}) {
+  const [isReplying, setIsReplying] = React.useState(false);
+  const hasReplies = node.replies.length > 0;
+  const clampedDepth = Math.min(depth, 6);
+
+  return (
+    <div
+      className="space-y-2"
+      style={{
+        marginLeft: clampedDepth * 12,
+      }}
+    >
+      <div className="rounded-xl bg-neutral-200/10 px-3 py-2 text-xs leading-5 dark:bg-neutral-900/10">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-neutral-500 dark:text-neutral-400">{node.createdBy}</span>
+          <span className="text-neutral-500 dark:text-neutral-400">
+            {differenceInDays(new Date(), node.createdAt) > 0
+              ? `${differenceInDays(new Date(), node.createdAt)}d ago`
+              : 'today'}
+          </span>
+        </div>
+        <p className="wrap-break-word">{node.body}</p>
+
+        {canReply && (
+          <button
+            type="button"
+            onClick={() => setIsReplying((v) => !v)}
+            className="mt-2 text-xs text-neutral-500 hover:text-neutral-400 dark:text-neutral-400 dark:hover:text-neutral-300"
+            disabled={commentsClosed}
+          >
+            reply
+          </button>
+        )}
+
+        {isReplying && canReply && (
+          <ChannelCommentForm
+            messageId={messageId}
+            parentCommentId={node.id}
+            disabled={commentsClosed}
+          />
+        )}
+      </div>
+
+      {hasReplies && (
+        <div className="space-y-2">
+          {node.replies.map((r) => (
+            <ChannelCommentNodeView
+              key={r.id}
+              node={r}
+              messageId={messageId}
+              canReply={canReply}
+              commentsClosed={commentsClosed}
+              depth={depth + 1}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

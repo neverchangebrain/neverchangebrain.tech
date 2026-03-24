@@ -3,11 +3,35 @@ import 'server-only';
 import { asc, desc, inArray } from 'drizzle-orm';
 
 import { db } from '@/db';
-import { channelComments, channelMessages } from '@/db/schema';
+import { channelComments, channelMessages, channelReactions } from '@/db/schema';
 
-import type { ChannelComment, ChannelCommentNode, ChannelThread } from '../model/types';
+import { CHANNEL_REACTION_EMOJIS } from '../model/types';
 
-export async function getChannelThreads(): Promise<ChannelThread[]> {
+import type {
+  ChannelComment,
+  ChannelCommentNode,
+  ChannelReaction,
+  ChannelReactionEmoji,
+  ChannelThread,
+} from '../model/types';
+
+type DbChannelComment = Omit<ChannelComment, 'reactions'>;
+
+function emptyReactions(): ChannelReaction[] {
+  return CHANNEL_REACTION_EMOJIS.map((emoji) => ({ emoji, count: 0, reacted: false }));
+}
+
+function mergeReactions(
+  base: ChannelReaction[],
+  updates: Map<ChannelReactionEmoji, { count: number; reacted: boolean }>,
+): ChannelReaction[] {
+  return base.map((r) => {
+    const u = updates.get(r.emoji);
+    return u ? { ...r, count: u.count, reacted: u.reacted } : r;
+  });
+}
+
+export async function getChannelThreads(viewerEmail?: string | null): Promise<ChannelThread[]> {
   const messages = await db
     .select({
       id: channelMessages.id,
@@ -43,18 +67,64 @@ export async function getChannelThreads(): Promise<ChannelThread[]> {
     .where(inArray(channelComments.messageId, messageIds))
     .orderBy(asc(channelComments.createdAt), asc(channelComments.id));
 
-  const commentsByMessageId = new Map<number, ChannelComment[]>();
+  const commentIds = comments.map((c) => c.id);
+
+  const reactions = await db
+    .select({
+      messageId: channelReactions.messageId,
+      commentId: channelReactions.commentId,
+      emoji: channelReactions.emoji,
+      email: channelReactions.email,
+    })
+    .from(channelReactions)
+    .where(inArray(channelReactions.messageId, messageIds));
+
+  const messageReactions = new Map<
+    number,
+    Map<ChannelReactionEmoji, { count: number; reacted: boolean }>
+  >();
+  const commentReactions = new Map<
+    number,
+    Map<ChannelReactionEmoji, { count: number; reacted: boolean }>
+  >();
+  const allowed = new Set<string>(CHANNEL_REACTION_EMOJIS);
+
+  const commentIdSet = new Set<number>(commentIds);
+
+  for (const r of reactions) {
+    if (!allowed.has(r.emoji)) continue;
+    const emoji = r.emoji as ChannelReactionEmoji;
+    const isViewer = Boolean(viewerEmail) && r.email === viewerEmail;
+
+    if (r.commentId && commentIdSet.has(r.commentId)) {
+      const map = commentReactions.get(r.commentId) ?? new Map();
+      const prev = map.get(emoji) ?? { count: 0, reacted: false };
+      map.set(emoji, { count: prev.count + 1, reacted: prev.reacted || isViewer });
+      commentReactions.set(r.commentId, map);
+      continue;
+    }
+
+    const map = messageReactions.get(r.messageId) ?? new Map();
+    const prev = map.get(emoji) ?? { count: 0, reacted: false };
+    map.set(emoji, { count: prev.count + 1, reacted: prev.reacted || isViewer });
+    messageReactions.set(r.messageId, map);
+  }
+
+  const commentsByMessageId = new Map<number, DbChannelComment[]>();
   for (const c of comments) {
     const list = commentsByMessageId.get(c.messageId) ?? [];
     list.push(c);
     commentsByMessageId.set(c.messageId, list);
   }
 
-  function buildTree(messageComments: ChannelComment[]): ChannelCommentNode[] {
+  function buildTree(messageComments: DbChannelComment[]): ChannelCommentNode[] {
     const nodes = new Map<number, ChannelCommentNode>();
 
+    const base = emptyReactions();
+
     for (const c of messageComments) {
-      nodes.set(c.id, { ...c, replies: [] });
+      const r = commentReactions.get(c.id) ?? new Map();
+      nodes.set(c.id, { ...c, reactions: mergeReactions(base, r), replies: [] });
     }
 
     const roots: ChannelCommentNode[] = [];
@@ -76,8 +146,11 @@ export async function getChannelThreads(): Promise<ChannelThread[]> {
 
   return messages.map((m) => {
     const messageComments = commentsByMessageId.get(m.id) ?? [];
+    const base = emptyReactions();
+    const r = messageReactions.get(m.id) ?? new Map();
     return {
       ...m,
+      reactions: mergeReactions(base, r),
       comments: buildTree(messageComments),
     };
   });

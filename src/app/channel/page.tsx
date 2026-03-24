@@ -18,16 +18,17 @@ export const dynamic = 'force-dynamic';
 
 export default async function ChannelPage() {
   const session = await auth();
-  const isLoggedIn = session?.user?.email;
+  const viewerEmail = session?.user?.email ?? null;
+  const isLoggedIn = Boolean(viewerEmail);
 
-  const entries = await getChannelThreads();
+  const entries = await getChannelThreads(viewerEmail);
 
   return (
     <section>
       <Heading>
         {isLoggedIn && (
           <>
-            <span>Hi {session.user?.name}</span> <br />
+            <span>Hi {session?.user?.name}</span> <br />
           </>
         )}
         Channel feed — leave a message
@@ -44,7 +45,7 @@ export default async function ChannelPage() {
         )}
       </ChannelFormShell>
 
-      <ChannelEntries entries={entries} canComment={Boolean(isLoggedIn)} />
+      <ChannelEntries entries={entries} canComment={isLoggedIn} viewerEmail={viewerEmail} />
     </section>
   );
 }

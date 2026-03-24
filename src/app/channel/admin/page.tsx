@@ -23,7 +23,7 @@ export default async function ChannelAdminPage() {
   const email = session?.user?.email;
   if (!email || email !== networking.email) notFound();
 
-  const threads = await getChannelThreads();
+  const threads = await getChannelThreads(email);
 
   return (
     <section>

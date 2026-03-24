@@ -4,7 +4,13 @@ import * as React from 'react';
 
 import { getSupabaseBrowserClient } from '@/lib/supabase-browser';
 
-import type { ChannelCommentNode, ChannelThread } from '../model/types';
+import { CHANNEL_REACTION_EMOJIS } from '../model/types';
+
+import type { ChannelCommentNode, ChannelReaction, ChannelThread } from '../model/types';
+
+function defaultReactions(): ChannelReaction[] {
+  return CHANNEL_REACTION_EMOJIS.map((emoji) => ({ emoji, count: 0, reacted: false }));
+}
 
 type GuestbookRow = {
   id: number;
@@ -23,6 +29,15 @@ type ChannelCommentRow = {
   email: string | null;
   body: string | null;
   createdBy: string | null;
+  createdAt: string | Date;
+};
+
+type ChannelReactionRow = {
+  id: number;
+  messageId: number;
+  commentId: number | null;
+  emoji: string;
+  email: string;
   createdAt: string | Date;
 };
 
@@ -69,6 +84,7 @@ function upsertThreadFromRow(threads: ChannelThread[], row: GuestbookRow): Chann
       createdAt,
       isPinned: row.isPinned,
       commentsClosed: row.commentsClosed,
+      reactions: defaultReactions(),
       comments: [],
     },
     ...next,
@@ -105,6 +121,7 @@ function normalizeCommentRoots(roots: ChannelCommentNode[]): ChannelCommentNode[
     byId.set(n.id, {
       ...n,
       createdAt: toDate(n.createdAt as unknown as string | Date),
+      reactions: n.reactions ?? defaultReactions(),
       replies: [],
     });
   }
@@ -161,6 +178,7 @@ function upsertCommentInTree(
           body: row.body,
           createdBy: row.createdBy,
           createdAt,
+          reactions: defaultReactions(),
           replies: [],
         };
         n.replies = insertSortedByCreatedAt(n.replies, newNode);
@@ -185,6 +203,7 @@ function upsertCommentInTree(
     body: row.body,
     createdBy: row.createdBy,
     createdAt,
+    reactions: defaultReactions(),
     replies: [],
   };
 
@@ -253,8 +272,85 @@ function deleteCommentById(
   });
 }
 
+function bumpReaction(
+  reactions: ChannelReaction[],
+  emoji: string,
+  delta: number,
+  reactedDelta: boolean | null,
+): ChannelReaction[] {
+  const allowed = new Set<string>(CHANNEL_REACTION_EMOJIS);
+  if (!allowed.has(emoji)) return reactions;
+
+  return reactions.map((r) => {
+    if (r.emoji !== (emoji as any)) return r;
+    const nextCount = Math.max(0, (r.count ?? 0) + delta);
+    const nextReacted = reactedDelta === null ? r.reacted : reactedDelta;
+    return {
+      ...r,
+      count: nextCount,
+      reacted: nextReacted,
+    };
+  });
+}
+
+function updateCommentNodeReaction(
+  nodes: ChannelCommentNode[],
+  commentId: number,
+  emoji: string,
+  delta: number,
+  reactedDelta: boolean | null,
+): ChannelCommentNode[] {
+  return nodes.map((n) => {
+    if (n.id === commentId) {
+      return {
+        ...n,
+        reactions: bumpReaction(n.reactions ?? defaultReactions(), emoji, delta, reactedDelta),
+      };
+    }
+    if (n.replies?.length) {
+      return {
+        ...n,
+        replies: updateCommentNodeReaction(n.replies, commentId, emoji, delta, reactedDelta),
+      };
+    }
+    return n;
+  });
+}
+
+function applyReactionDelta(
+  threads: ChannelThread[],
+  row: ChannelReactionRow,
+  delta: number,
+  viewerEmail?: string | null,
+): ChannelThread[] {
+  const reactedDelta = viewerEmail && row.email === viewerEmail ? delta > 0 : null;
+
+  return threads.map((t) => {
+    if (t.id !== row.messageId) return t;
+
+    if (!row.commentId) {
+      return {
+        ...t,
+        reactions: bumpReaction(t.reactions ?? defaultReactions(), row.emoji, delta, reactedDelta),
+      };
+    }
+
+    return {
+      ...t,
+      comments: updateCommentNodeReaction(
+        t.comments ?? [],
+        row.commentId,
+        row.emoji,
+        delta,
+        reactedDelta,
+      ),
+    };
+  });
+}
+
 export function useChannelRealtime(
   setThreads: React.Dispatch<React.SetStateAction<ChannelThread[]>>,
+  viewerEmail?: string | null,
 ) {
   React.useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -291,10 +387,28 @@ export function useChannelRealtime(
           });
         },
       )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'channelReactions' },
+        (payload) => {
+          setThreads((prev) => {
+            if (payload.eventType === 'DELETE') {
+              const oldRow = payload.old as Partial<ChannelReactionRow>;
+              if (!oldRow?.messageId || !oldRow?.emoji || oldRow.commentId === undefined)
+                return prev;
+              return applyReactionDelta(prev, oldRow as ChannelReactionRow, -1, viewerEmail);
+            }
+
+            const row = payload.new as ChannelReactionRow;
+            if (!row?.messageId || !row?.emoji) return prev;
+            return applyReactionDelta(prev, row, 1, viewerEmail);
+          });
+        },
+      )
       .subscribe();
 
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [setThreads]);
+  }, [setThreads, viewerEmail]);
 }

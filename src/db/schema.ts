@@ -49,6 +49,20 @@ export const channelComments = pgTable(
 export type SelectChannelComment = typeof channelComments.$inferSelect;
 export type InsertChannelComment = typeof channelComments.$inferInsert;
 
+export const channelReactions = pgTable('channelReactions', {
+  id: serial('id').primaryKey(),
+  messageId: integer('messageId')
+    .notNull()
+    .references(() => guestbook.id, { onDelete: 'cascade' }),
+  commentId: integer('commentId').references(() => channelComments.id, { onDelete: 'cascade' }),
+  emoji: text('emoji').notNull(),
+  email: text('email').notNull(),
+  createdAt: timestamp('createdAt').defaultNow().notNull(),
+});
+
+export type SelectChannelReaction = typeof channelReactions.$inferSelect;
+export type InsertChannelReaction = typeof channelReactions.$inferInsert;
+
 export const experience = pgTable('experience', {
   id: serial('id').primaryKey(),
   workType: text('workType').notNull().default('company'),

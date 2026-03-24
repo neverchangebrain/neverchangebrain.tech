@@ -1,3 +1,13 @@
+export const CHANNEL_REACTION_EMOJIS = ['👍', '❤️', '😂'] as const;
+
+export type ChannelReactionEmoji = (typeof CHANNEL_REACTION_EMOJIS)[number];
+
+export type ChannelReaction = {
+  emoji: ChannelReactionEmoji;
+  count: number;
+  reacted: boolean;
+};
+
 export type ChannelMessage = {
   id: number;
   email: string | null;
@@ -6,6 +16,7 @@ export type ChannelMessage = {
   createdAt: Date;
   isPinned: boolean;
   commentsClosed: boolean;
+  reactions: ChannelReaction[];
 };
 
 export type ChannelComment = {
@@ -16,6 +27,7 @@ export type ChannelComment = {
   body: string | null;
   createdBy: string | null;
   createdAt: Date;
+  reactions: ChannelReaction[];
 };
 
 export type ChannelCommentNode = ChannelComment & {

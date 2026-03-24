@@ -24,7 +24,7 @@ export function ChannelAdminPanel({
 }) {
   const [threads, setThreads] = React.useState(initialThreads);
 
-  useChannelRealtime(setThreads);
+  useChannelRealtime(setThreads, null);
 
   React.useEffect(() => {
     setThreads(initialThreads);

@@ -1,7 +1,7 @@
 'use server';
 
 import { differenceInMinutes } from 'date-fns';
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq, isNull } from 'drizzle-orm';
 import { type Session } from 'next-auth';
 import { revalidatePath } from 'next/cache';
 import { Resend } from 'resend';
@@ -9,8 +9,10 @@ import { Resend } from 'resend';
 import { auth } from '@/auth';
 import { networking } from '@/constants/profile';
 import { db } from '@/db';
-import { channelComments, channelMessages } from '@/db/schema';
+import { channelComments, channelMessages, channelReactions } from '@/db/schema';
 import { env } from '@/env';
+
+import { CHANNEL_REACTION_EMOJIS } from '../model/types';
 
 type ActionResult = {
   success: boolean;
@@ -249,4 +251,122 @@ export async function adminToggleChannelMessageCommentsClosed(formData: FormData
 
   revalidatePath('/channel');
   revalidatePath('/channel/admin');
+}
+
+export async function toggleChannelReaction(
+  messageId: number,
+  commentId: number | null,
+  emoji: string,
+): Promise<ActionResult> {
+  const session = await requireSession();
+  if (!session.user) throw new Error('Unauthorized');
+
+  const email = session.user.email as string;
+
+  if (!CHANNEL_REACTION_EMOJIS.includes(emoji as any)) {
+    return { success: false, message: 'Invalid reaction' };
+  }
+
+  const exists = await db
+    .select({ id: channelReactions.id })
+    .from(channelReactions)
+    .where(
+      and(
+        eq(channelReactions.messageId, messageId),
+        commentId ? eq(channelReactions.commentId, commentId) : isNull(channelReactions.commentId),
+        eq(channelReactions.emoji, emoji),
+        eq(channelReactions.email, email),
+      ),
+    )
+    .limit(1);
+
+  try {
+    if (exists[0]) {
+      await db.delete(channelReactions).where(eq(channelReactions.id, exists[0].id));
+    } else {
+      await db.insert(channelReactions).values({
+        messageId,
+        commentId,
+        emoji,
+        email,
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: 'Failed to react' };
+  }
+
+  revalidatePath('/channel');
+  revalidatePath('/channel/admin');
+  return { success: true, message: 'OK' };
+}
+
+export async function editChannelMessage(
+  messageId: number,
+  nextBody: string,
+): Promise<ActionResult> {
+  const session = await requireSession();
+  if (!session.user) throw new Error('Unauthorized');
+
+  const email = session.user.email as string;
+  const body = nextBody.slice(0, 500).trim();
+  if (!body) return { success: false, message: 'Message cannot be empty' };
+
+  const rows = await db
+    .select({ email: channelMessages.email })
+    .from(channelMessages)
+    .where(eq(channelMessages.id, messageId))
+    .limit(1);
+
+  const row = rows[0];
+  if (!row) return { success: false, message: 'Post not found' };
+
+  const isOwner = email === OWNER_EMAIL;
+  if (!isOwner && row.email !== email) return { success: false, message: 'Forbidden' };
+
+  try {
+    await db.update(channelMessages).set({ body }).where(eq(channelMessages.id, messageId));
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: 'Failed to edit' };
+  }
+
+  revalidatePath('/channel');
+  revalidatePath('/channel/admin');
+  return { success: true, message: 'Saved' };
+}
+
+export async function editChannelComment(
+  commentId: number,
+  nextBody: string,
+): Promise<ActionResult> {
+  const session = await requireSession();
+  if (!session.user) throw new Error('Unauthorized');
+
+  const email = session.user.email as string;
+  const body = nextBody.slice(0, 500).trim();
+  if (!body) return { success: false, message: 'Comment cannot be empty' };
+
+  const rows = await db
+    .select({ email: channelComments.email })
+    .from(channelComments)
+    .where(eq(channelComments.id, commentId))
+    .limit(1);
+
+  const row = rows[0];
+  if (!row) return { success: false, message: 'Comment not found' };
+
+  const isOwner = email === OWNER_EMAIL;
+  if (!isOwner && row.email !== email) return { success: false, message: 'Forbidden' };
+
+  try {
+    await db.update(channelComments).set({ body }).where(eq(channelComments.id, commentId));
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: 'Failed to edit' };
+  }
+
+  revalidatePath('/channel');
+  revalidatePath('/channel/admin');
+  return { success: true, message: 'Saved' };
 }

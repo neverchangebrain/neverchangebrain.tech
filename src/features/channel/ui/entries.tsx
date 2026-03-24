@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import * as React from 'react';
 
 import { ChannelCommentForm } from './comment-form';
+import { useChannelRealtime } from './realtime';
 
 import type { ChannelCommentNode, ChannelThread } from '../model/types';
 
@@ -17,6 +18,13 @@ type EntriesProps = {
 };
 
 export function ChannelEntries({ entries, canComment }: EntriesProps) {
+  const [threads, setThreads] = React.useState(entries);
+  useChannelRealtime(setThreads);
+
+  React.useEffect(() => {
+    setThreads(entries);
+  }, [entries]);
+
   return (
     <AnimatePresence>
       <motion.div
@@ -35,7 +43,7 @@ export function ChannelEntries({ entries, canComment }: EntriesProps) {
         }}
         className="mt-16 flex flex-col space-y-3 border-t border-white/5 py-8"
       >
-        {entries.map((entry) => (
+        {threads.map((entry) => (
           <ChannelEntry key={entry.id} entry={entry} canComment={canComment} />
         ))}
       </motion.div>

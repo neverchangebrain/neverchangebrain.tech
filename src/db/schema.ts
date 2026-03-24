@@ -1,4 +1,12 @@
-import { boolean, integer, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  foreignKey,
+  integer,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+} from 'drizzle-orm/pg-core';
 
 export const guestbook = pgTable('guestbook', {
   id: serial('id').primaryKey(),
@@ -17,17 +25,26 @@ export const channelMessages = guestbook;
 export type SelectChannelMessage = SelectGuestbook;
 export type InsertChannelMessage = InsertGuestbook;
 
-export const channelComments = pgTable('channelComments', {
-  id: serial('id').primaryKey(),
-  messageId: integer('messageId')
-    .notNull()
-    .references(() => guestbook.id, { onDelete: 'cascade' }),
-  parentId: integer('parentId').references(() => channelComments.id, { onDelete: 'cascade' }),
-  email: text('email'),
-  body: text('body'),
-  createdBy: text('createdBy'),
-  createdAt: timestamp('createdAt').defaultNow().notNull(),
-});
+export const channelComments = pgTable(
+  'channelComments',
+  {
+    id: serial('id').primaryKey(),
+    messageId: integer('messageId')
+      .notNull()
+      .references(() => guestbook.id, { onDelete: 'cascade' }),
+    parentId: integer('parentId'),
+    email: text('email'),
+    body: text('body'),
+    createdBy: text('createdBy'),
+    createdAt: timestamp('createdAt').defaultNow().notNull(),
+  },
+  (table) => ({
+    parentFk: foreignKey({
+      columns: [table.parentId],
+      foreignColumns: [table.id],
+    }).onDelete('cascade'),
+  }),
+);
 
 export type SelectChannelComment = typeof channelComments.$inferSelect;
 export type InsertChannelComment = typeof channelComments.$inferInsert;

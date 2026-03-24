@@ -14,6 +14,8 @@ export const metadata = {
   description: 'A channel feed where visitors can leave a message or comment.',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default async function ChannelPage() {
   const session = await auth();
   const isLoggedIn = session?.user?.email;

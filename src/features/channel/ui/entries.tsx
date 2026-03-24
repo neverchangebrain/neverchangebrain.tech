@@ -7,6 +7,7 @@ import { networking } from '@/constants/profile';
 import { cn } from '@/lib/utils';
 import { differenceInDays } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
+import Image from 'next/image';
 import * as React from 'react';
 
 import { ChannelCommentForm } from './comment-form';
@@ -18,7 +19,17 @@ import type { ChannelCommentNode, ChannelThread } from '../model/types';
 
 function ReactionIcon({ emoji }: { emoji: string }) {
   if (emoji === 'emoji') {
-    return <img src="/assets/emoji.gif" alt="reaction" className="h-4 w-4" draggable={false} />;
+    return (
+      <Image
+        src="/assets/emoji.gif"
+        alt="reaction"
+        width={16}
+        height={16}
+        className="h-4 w-4"
+        unoptimized
+        draggable={false}
+      />
+    );
   }
 
   return <span>{emoji}</span>;

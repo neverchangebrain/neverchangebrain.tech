@@ -20,11 +20,9 @@ const initialState: FormState = {
 export function ChannelCommentForm({
   messageId,
   parentCommentId,
-  disabled,
 }: {
   messageId: number;
   parentCommentId?: number | null;
-  disabled?: boolean;
 }) {
   const ref = React.useRef<HTMLFormElement>(null);
   const [state, action] = React.useActionState<FormState, FormData>(formAction, initialState);
@@ -42,18 +40,15 @@ export function ChannelCommentForm({
           id={`entry-${messageId}`}
           name="entry"
           type="text"
-          placeholder={disabled ? 'comments are closed' : 'write a comment'}
+          placeholder="write a comment"
           minLength={2}
           maxLength={500}
           required
-          disabled={disabled}
           className={cn({
             'border-red-300': !state.success && state.message,
           })}
         />
-        <Button type="submit" disabled={disabled}>
-          reply
-        </Button>
+        <Button type="submit">reply</Button>
       </form>
 
       {state.message && (

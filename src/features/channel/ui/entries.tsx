@@ -112,7 +112,7 @@ export function ChannelEntry({ entry, className, canComment }: EntryProps) {
             </div>
           )}
 
-          {canComment && <ChannelCommentForm messageId={entry.id} disabled={commentsClosed} />}
+          {canComment && !commentsClosed && <ChannelCommentForm messageId={entry.id} />}
         </div>
       )}
     </motion.div>
@@ -154,23 +154,18 @@ function ChannelCommentNodeView({
         </div>
         <p className="wrap-break-word">{node.body}</p>
 
-        {canReply && (
+        {canReply && !commentsClosed && (
           <button
             type="button"
             onClick={() => setIsReplying((v) => !v)}
             className="mt-2 text-xs text-neutral-500 hover:text-neutral-400 dark:text-neutral-400 dark:hover:text-neutral-300"
-            disabled={commentsClosed}
           >
             reply
           </button>
         )}
 
-        {isReplying && canReply && (
-          <ChannelCommentForm
-            messageId={messageId}
-            parentCommentId={node.id}
-            disabled={commentsClosed}
-          />
+        {isReplying && canReply && !commentsClosed && (
+          <ChannelCommentForm messageId={messageId} parentCommentId={node.id} />
         )}
       </div>
 

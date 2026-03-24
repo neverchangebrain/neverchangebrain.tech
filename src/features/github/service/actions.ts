@@ -5,7 +5,7 @@ import { unstable_cache } from 'next/cache';
 
 import type { GithubContributions, GithubStats } from '../model/types';
 
-const LOGIN = 'justrawaccel';
+const LOGIN = 'neverchangebrain';
 const REVALIDATE_SECONDS = 60 * 60;
 
 async function getGithubStatsUncached(): Promise<GithubStats> {

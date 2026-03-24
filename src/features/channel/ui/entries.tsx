@@ -16,6 +16,14 @@ import { editChannelComment, editChannelMessage, toggleChannelReaction } from '.
 
 import type { ChannelCommentNode, ChannelThread } from '../model/types';
 
+function ReactionIcon({ emoji }: { emoji: string }) {
+  if (emoji === 'emoji') {
+    return <img src="/assets/emoji.gif" alt="reaction" className="h-4 w-4" draggable={false} />;
+  }
+
+  return <span>{emoji}</span>;
+}
+
 function toggleReactionInThreads(
   threads: ChannelThread[],
   messageId: number,
@@ -259,8 +267,10 @@ export function ChannelEntry({
               void toggleChannelReaction(entry.id, null, r.emoji);
             }}
           >
-            {r.emoji}
-            {r.count > 0 ? ` ${r.count}` : ''}
+            <span className="flex items-center gap-1">
+              <ReactionIcon emoji={r.emoji} />
+              {r.count > 0 ? <span>{r.count}</span> : null}
+            </span>
           </Button>
         ))}
       </div>
@@ -432,8 +442,10 @@ function ChannelCommentNodeView({
                 void toggleChannelReaction(messageId, node.id, r.emoji);
               }}
             >
-              {r.emoji}
-              {r.count > 0 ? ` ${r.count}` : ''}
+              <span className="flex items-center gap-1">
+                <ReactionIcon emoji={r.emoji} />
+                {r.count > 0 ? <span>{r.count}</span> : null}
+              </span>
             </Button>
           ))}
         </div>

@@ -354,6 +354,7 @@ export function useChannelRealtime(
 ) {
   React.useEffect(() => {
     const supabase = getSupabaseBrowserClient();
+    const reactionById = new Map<number, ChannelReactionRow>();
 
     const channel = supabase
       .channel('channel-realtime')
@@ -394,13 +395,25 @@ export function useChannelRealtime(
           setThreads((prev) => {
             if (payload.eventType === 'DELETE') {
               const oldRow = payload.old as Partial<ChannelReactionRow>;
-              if (!oldRow?.messageId || !oldRow?.emoji || oldRow.commentId === undefined)
-                return prev;
-              return applyReactionDelta(prev, oldRow as ChannelReactionRow, -1, viewerEmail);
+              const id = oldRow?.id ? Number(oldRow.id) : null;
+
+              const fromCache = id ? reactionById.get(id) : undefined;
+              const row = (
+                oldRow?.messageId && oldRow?.emoji && oldRow.commentId !== undefined
+                  ? (oldRow as ChannelReactionRow)
+                  : fromCache
+              ) as ChannelReactionRow | undefined;
+
+              if (!row?.messageId || !row?.emoji || row.commentId === undefined) return prev;
+
+              if (id) reactionById.delete(id);
+              return applyReactionDelta(prev, row, -1, viewerEmail);
             }
 
             const row = payload.new as ChannelReactionRow;
             if (!row?.messageId || !row?.emoji) return prev;
+
+            if (row?.id) reactionById.set(Number(row.id), row);
             return applyReactionDelta(prev, row, 1, viewerEmail);
           });
         },

@@ -1,4 +1,4 @@
-export const CHANNEL_REACTION_EMOJIS = ['👍', '❤️', '😂'] as const;
+export const CHANNEL_REACTION_EMOJIS = ['emoji'] as const;
 
 export type ChannelReactionEmoji = (typeof CHANNEL_REACTION_EMOJIS)[number];
 

@@ -253,6 +253,29 @@ export async function adminToggleChannelMessageCommentsClosed(formData: FormData
   revalidatePath('/channel/admin');
 }
 
+export async function adminClearChannelReactions(formData: FormData): Promise<void> {
+  await requireOwnerSession();
+
+  const messageId = Number(formData.get('messageId'));
+  if (!messageId || Number.isNaN(messageId)) throw new Error('Invalid messageId');
+
+  const rawCommentId = formData.get('commentId');
+  const commentId = rawCommentId ? Number(rawCommentId) : null;
+  if (rawCommentId && (!commentId || Number.isNaN(commentId))) throw new Error('Invalid commentId');
+
+  await db
+    .delete(channelReactions)
+    .where(
+      and(
+        eq(channelReactions.messageId, messageId),
+        commentId ? eq(channelReactions.commentId, commentId) : isNull(channelReactions.commentId),
+      ),
+    );
+
+  revalidatePath('/channel');
+  revalidatePath('/channel/admin');
+}
+
 export async function toggleChannelReaction(
   messageId: number,
   commentId: number | null,

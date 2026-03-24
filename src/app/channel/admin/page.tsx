@@ -2,6 +2,7 @@ import { auth } from '@/auth';
 import { Heading } from '@/components/heading';
 import { networking } from '@/constants/profile';
 import {
+  adminClearChannelReactions,
   adminDeleteChannelComment,
   adminDeleteChannelMessage,
   adminToggleChannelMessageCommentsClosed,
@@ -32,6 +33,7 @@ export default async function ChannelAdminPage() {
       <ChannelAdminPanel
         initialThreads={threads}
         actions={{
+          adminClearChannelReactions,
           adminDeleteChannelComment,
           adminDeleteChannelMessage,
           adminToggleChannelMessageCommentsClosed,

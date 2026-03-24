@@ -112,13 +112,15 @@ export function ChannelEntries({ entries, canComment, viewerEmail }: EntriesProp
         ))}
 
         {threads.length > visibleCount && (
-          <button
+          <Button
             type="button"
-            className="mt-2 self-center rounded-xl border border-white/10 bg-neutral-200/10 px-4 py-2 text-xs text-neutral-500 dark:bg-neutral-900/10 dark:text-neutral-400"
+            variant="outline"
+            size="sm"
+            className="mt-2 self-center"
             onClick={() => setVisibleCount((v) => v + 20)}
           >
             load more
-          </button>
+          </Button>
         )}
       </motion.div>
     </AnimatePresence>
@@ -153,6 +155,8 @@ export function ChannelEntry({
   const [activeReplyTarget, setActiveReplyTarget] = React.useState<
     { kind: 'post' } | { kind: 'comment'; id: number } | null
   >(null);
+
+  const [visibleRootComments, setVisibleRootComments] = React.useState(5);
 
   const daysSinceEntry = differenceInDays(new Date(), createdAt);
   const timeSinceEntry =
@@ -290,7 +294,7 @@ export function ChannelEntry({
         <div className="mt-2 border-t border-white/5 pt-3">
           {comments.length > 0 && (
             <div className="space-y-2">
-              {comments.map((c) => (
+              {comments.slice(0, visibleRootComments).map((c) => (
                 <ChannelCommentNodeView
                   key={c.id}
                   node={c}
@@ -304,6 +308,18 @@ export function ChannelEntry({
                   setThreads={setThreads}
                 />
               ))}
+
+              {comments.length > visibleRootComments && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="self-start"
+                  onClick={() => setVisibleRootComments((v) => v + 5)}
+                >
+                  load more comments
+                </Button>
+              )}
             </div>
           )}
 

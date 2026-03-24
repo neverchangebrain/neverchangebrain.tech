@@ -1,4 +1,5 @@
 export {
+  adminClearChannelReactions,
   adminDeleteChannelComment,
   adminDeleteChannelMessage,
   adminToggleChannelMessageCommentsClosed,

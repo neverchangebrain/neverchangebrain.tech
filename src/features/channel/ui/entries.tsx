@@ -10,6 +10,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
 import * as React from 'react';
 
+import { toast } from '@/components/ui/use-toast';
+
 import { ChannelCommentForm } from './comment-form';
 import { useChannelRealtime } from './realtime';
 
@@ -149,7 +151,6 @@ export function ChannelEntry({
 
   const [isEditingPost, setIsEditingPost] = React.useState(false);
   const [postDraft, setPostDraft] = React.useState(body ?? '');
-  const [postEditMessage, setPostEditMessage] = React.useState<string>('');
   const [isPostPending, startPostTransition] = React.useTransition();
 
   const [activeReplyTarget, setActiveReplyTarget] = React.useState<
@@ -166,6 +167,15 @@ export function ChannelEntry({
         ? 'yesterday'
         : 'today';
 
+  const meta = [
+    createdBy ?? 'Anonymous',
+    isOwnerPost ? 'owner' : null,
+    isPinned ? 'pinned' : null,
+    commentsClosed ? 'closed' : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
   return (
     <motion.div
       variants={defaultVariantsNoDelay}
@@ -176,24 +186,7 @@ export function ChannelEntry({
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-neutral-500 dark:text-neutral-400">{createdBy}</span>
-          {isOwnerPost && (
-            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-neutral-500 dark:border-black/10 dark:text-neutral-600">
-              owner
-            </span>
-          )}
-          {isPinned && (
-            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-neutral-500 dark:border-black/10 dark:text-neutral-600">
-              pinned
-            </span>
-          )}
-          {commentsClosed && (
-            <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-neutral-500 dark:border-black/10 dark:text-neutral-600">
-              comments closed
-            </span>
-          )}
-        </div>
+        <span className="text-xs text-neutral-500 dark:text-neutral-400">{meta}</span>
         <div className="flex items-center gap-2">
           {canEditPost && (
             <Button
@@ -203,7 +196,6 @@ export function ChannelEntry({
               className="h-7 px-2 text-[11px] text-neutral-500 dark:text-neutral-400"
               onClick={(e) => {
                 e.stopPropagation();
-                setPostEditMessage('');
                 setPostDraft(body ?? '');
                 setIsEditingPost((v) => !v);
               }}
@@ -235,7 +227,11 @@ export function ChannelEntry({
               onClick={() => {
                 startPostTransition(async () => {
                   const res = await editChannelMessage(entry.id, postDraft);
-                  setPostEditMessage(res.message);
+                  toast({
+                    title: res.success ? 'Saved' : 'Failed',
+                    description: res.message,
+                    variant: res.success ? 'default' : 'destructive',
+                  });
                   if (res.success) setIsEditingPost(false);
                 });
               }}
@@ -243,10 +239,6 @@ export function ChannelEntry({
               save
             </Button>
           </div>
-
-          {postEditMessage && (
-            <p className="text-xs text-neutral-500 dark:text-neutral-400">{postEditMessage}</p>
-          )}
         </div>
       ) : (
         <p
@@ -279,7 +271,15 @@ export function ChannelEntry({
               e.stopPropagation();
               if (!canComment) return;
               setThreads((prev) => toggleReactionInThreads(prev, entry.id, null, r.emoji));
-              void toggleChannelReaction(entry.id, null, r.emoji);
+              void toggleChannelReaction(entry.id, null, r.emoji).then((res) => {
+                if (res.success) return;
+                setThreads((prev) => toggleReactionInThreads(prev, entry.id, null, r.emoji));
+                toast({
+                  title: 'Failed',
+                  description: res.message,
+                  variant: 'destructive',
+                });
+              });
             }}
           >
             <span className="flex items-center gap-1">
@@ -291,7 +291,7 @@ export function ChannelEntry({
       </div>
 
       {(comments.length > 0 || canComment) && (
-        <div className="mt-2 border-t border-white/5 pt-3">
+        <div className="mt-3">
           {comments.length > 0 && (
             <div className="space-y-2">
               {comments.slice(0, visibleRootComments).map((c) => (
@@ -364,7 +364,6 @@ function ChannelCommentNodeView({
 
   const [isEditing, setIsEditing] = React.useState(false);
   const [draft, setDraft] = React.useState(node.body ?? '');
-  const [editMessage, setEditMessage] = React.useState<string>('');
   const [isPending, startTransition] = React.useTransition();
 
   return (
@@ -399,7 +398,6 @@ function ChannelCommentNodeView({
                 className="h-6 px-2 text-[11px] text-neutral-500 dark:text-neutral-400"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setEditMessage('');
                   setDraft(node.body ?? '');
                   setIsEditing((v) => !v);
                 }}
@@ -435,7 +433,11 @@ function ChannelCommentNodeView({
                   e.stopPropagation();
                   startTransition(async () => {
                     const res = await editChannelComment(node.id, draft);
-                    setEditMessage(res.message);
+                    toast({
+                      title: res.success ? 'Saved' : 'Failed',
+                      description: res.message,
+                      variant: res.success ? 'default' : 'destructive',
+                    });
                     if (res.success) setIsEditing(false);
                   });
                 }}
@@ -443,9 +445,6 @@ function ChannelCommentNodeView({
                 save
               </Button>
             </div>
-            {editMessage && (
-              <p className="text-[11px] text-neutral-500 dark:text-neutral-400">{editMessage}</p>
-            )}
           </div>
         ) : (
           <p className="wrap-break-word">{node.body}</p>
@@ -466,7 +465,15 @@ function ChannelCommentNodeView({
               onClick={() => {
                 if (!canReply) return;
                 setThreads((prev) => toggleReactionInThreads(prev, messageId, node.id, r.emoji));
-                void toggleChannelReaction(messageId, node.id, r.emoji);
+                void toggleChannelReaction(messageId, node.id, r.emoji).then((res) => {
+                  if (res.success) return;
+                  setThreads((prev) => toggleReactionInThreads(prev, messageId, node.id, r.emoji));
+                  toast({
+                    title: 'Failed',
+                    description: res.message,
+                    variant: 'destructive',
+                  });
+                });
               }}
             >
               <span className="flex items-center gap-1">

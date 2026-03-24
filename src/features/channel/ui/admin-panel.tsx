@@ -4,6 +4,7 @@ import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { toast } from '@/components/ui/use-toast';
 import Image from 'next/image';
 
 import { editChannelComment, editChannelMessage } from '../service/actions';
@@ -188,7 +189,6 @@ function AdminInlineEdit({
 }) {
   const [isEditing, setIsEditing] = React.useState(false);
   const [draft, setDraft] = React.useState(initialBody);
-  const [msg, setMsg] = React.useState('');
   const [isPending, startTransition] = React.useTransition();
 
   if (!isEditing) {
@@ -199,7 +199,6 @@ function AdminInlineEdit({
         size="sm"
         className="h-8 px-2 text-[11px] text-neutral-500 dark:text-neutral-400"
         onClick={() => {
-          setMsg('');
           setDraft(initialBody);
           setIsEditing(true);
         }}
@@ -226,7 +225,11 @@ function AdminInlineEdit({
           onClick={() => {
             startTransition(async () => {
               const res = await onSave(draft);
-              setMsg(res.message);
+              toast({
+                title: res.success ? 'Saved' : 'Failed',
+                description: res.message,
+                variant: res.success ? 'default' : 'destructive',
+              });
               if (res.success) setIsEditing(false);
             });
           }}
@@ -243,7 +246,6 @@ function AdminInlineEdit({
           cancel
         </Button>
       </div>
-      {msg ? <div className="text-[11px] text-neutral-500 dark:text-neutral-400">{msg}</div> : null}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { Footer } from '@/components/layouts/footer';
 import { Header } from '@/components/layouts/header';
 import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/toaster';
 import { websiteUrl } from '@/constants/profile';
 import { cn } from '@/lib/utils';
 import { Analytics } from '@vercel/analytics/react';
@@ -61,6 +62,8 @@ export default function RootLayout({
 
             <Footer />
           </div>
+
+          <Toaster />
         </ThemeProvider>
 
         <div className="pointer-events-none fixed inset-0 z-99 h-full w-full overflow-hidden bg-[url(/assets/noise.png)] opacity-30 dark:opacity-[0.17]" />

@@ -12,7 +12,7 @@ export function ToastViewport() {
   return (
     <ToastPrimitive.Viewport
       className={cn(
-        'fixed top-6 right-6 z-50 flex w-[320px] max-w-[calc(100vw-2rem)] flex-col gap-2 outline-none',
+        'fixed top-4 right-4 left-4 z-50 flex w-auto flex-col gap-2 outline-none sm:top-6 sm:right-6 sm:left-auto sm:w-[320px]',
       )}
     />
   );

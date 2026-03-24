@@ -69,7 +69,7 @@ export function ChannelAdminPanel({
       {visibleThreads.map((t) => (
         <div
           key={t.id}
-          className="rounded-2xl border border-white/5 bg-neutral-900/10 px-4 py-4 text-sm dark:bg-neutral-200/5"
+          className="rounded-2xl border border-neutral-950/10 bg-neutral-950/5 px-4 py-4 text-sm dark:border-white/5 dark:bg-neutral-200/5"
         >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
@@ -83,7 +83,7 @@ export function ChannelAdminPanel({
                 {t.reactions.map((r) => (
                   <div
                     key={r.emoji}
-                    className="flex items-center gap-1 rounded-full border border-white/10 bg-neutral-200/10 px-2 py-1 text-[11px] text-neutral-500 dark:bg-neutral-900/10 dark:text-neutral-400"
+                    className="flex items-center gap-1 rounded-full border border-neutral-950/10 bg-neutral-950/5 px-2 py-1 text-[11px] text-neutral-500 dark:border-white/10 dark:bg-neutral-900/10 dark:text-neutral-400"
                   >
                     <ReactionIcon emoji={r.emoji} />
                     <span>{r.count ?? 0}</span>
@@ -134,7 +134,7 @@ export function ChannelAdminPanel({
           </div>
 
           {t.comments.length > 0 && (
-            <div className="mt-4 space-y-2 border-t border-white/5 pt-4">
+            <div className="mt-4 space-y-2 border-t border-neutral-950/10 pt-4 dark:border-white/5">
               {t.comments.slice(0, visibleRootCommentsByPostId[t.id] ?? 10).map((c) => (
                 <AdminCommentNode
                   key={c.id}
@@ -265,7 +265,7 @@ function AdminCommentNode({
 
   return (
     <div style={{ marginLeft: clampedDepth * 12 }} className="space-y-2">
-      <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl bg-neutral-200/10 px-3 py-2 text-xs dark:bg-neutral-900/10">
+      <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl bg-neutral-950/5 px-3 py-2 text-xs dark:bg-neutral-900/10">
         <div className="min-w-0 wrap-break-word">
           <div className="text-neutral-500 dark:text-neutral-400">
             #{node.id} • {node.createdBy}
@@ -277,7 +277,7 @@ function AdminCommentNode({
             {node.reactions.map((r) => (
               <div
                 key={r.emoji}
-                className="flex items-center gap-1 rounded-full border border-white/10 bg-neutral-200/10 px-2 py-1 text-[11px] text-neutral-500 dark:bg-neutral-900/10 dark:text-neutral-400"
+                className="flex items-center gap-1 rounded-full border border-neutral-950/10 bg-neutral-950/5 px-2 py-1 text-[11px] text-neutral-500 dark:border-white/10 dark:bg-neutral-900/10 dark:text-neutral-400"
               >
                 <ReactionIcon emoji={r.emoji} />
                 <span>{r.count ?? 0}</span>

@@ -1,16 +1,17 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { defaultVariantsNoDelay } from '@/constants/motion-variants';
-import { networking } from '@/constants/profile';
-import { cn } from '@/lib/utils';
+import * as React from 'react';
+
 import { differenceInDays } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
-import * as React from 'react';
 
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
+import { defaultVariantsNoDelay } from '@/constants/motion-variants';
+import { networking } from '@/constants/profile';
+import { cn } from '@/lib/utils';
 
 import { ChannelCommentForm } from './comment-form';
 import { useChannelRealtime } from './realtime';
@@ -101,7 +102,7 @@ export function ChannelEntries({ entries, canComment, viewerEmail }: EntriesProp
             },
           },
         }}
-        className="mt-16 flex flex-col space-y-3 border-t border-white/5 py-8"
+        className="mt-16 flex flex-col space-y-3 border-t border-neutral-950/10 py-8 dark:border-white/5"
       >
         {visibleThreads.map((entry) => (
           <ChannelEntry
@@ -180,8 +181,8 @@ export function ChannelEntry({
     <motion.div
       variants={defaultVariantsNoDelay}
       className={cn(
-        'flex w-full flex-col gap-2 rounded-2xl border bg-neutral-200/10 px-4 py-3 text-sm leading-6 dark:border-white/5 dark:bg-neutral-900/10',
-        isOwnerPost && 'bg-neutral-900/10 dark:bg-neutral-200/10',
+        'flex w-full flex-col gap-2 rounded-2xl border border-neutral-950/10 bg-neutral-950/5 px-4 py-3 text-sm leading-6 dark:border-white/5 dark:bg-neutral-900/10',
+        isOwnerPost && 'bg-neutral-950/10 dark:bg-neutral-200/10',
         className,
       )}
     >
@@ -264,12 +265,13 @@ export function ChannelEntry({
             size="sm"
             className={cn(
               'h-7 px-2 text-xs',
-              r.reacted && 'bg-neutral-200/20 dark:bg-neutral-900/20',
+              r.reacted && 'bg-neutral-950/10 dark:bg-neutral-200/10',
             )}
             disabled={!canComment}
             onClick={(e) => {
               e.stopPropagation();
               if (!canComment) return;
+
               setThreads((prev) => toggleReactionInThreads(prev, entry.id, null, r.emoji));
               void toggleChannelReaction(entry.id, null, r.emoji).then((res) => {
                 if (res.success) return;
@@ -375,7 +377,7 @@ function ChannelCommentNodeView({
     >
       <div
         className={cn(
-          'rounded-xl bg-neutral-200/10 px-3 py-2 text-xs leading-5 dark:bg-neutral-900/10',
+          'rounded-xl bg-neutral-950/5 px-3 py-2 text-xs leading-5 dark:bg-neutral-900/10',
           canReply && !commentsClosed && 'cursor-pointer',
         )}
         onClick={() => {
@@ -459,11 +461,12 @@ function ChannelCommentNodeView({
               size="sm"
               className={cn(
                 'h-6 px-2 text-[11px]',
-                r.reacted && 'bg-neutral-200/20 dark:bg-neutral-900/20',
+                r.reacted && 'bg-neutral-950/10 dark:bg-neutral-200/10',
               )}
               disabled={!canReply}
               onClick={() => {
                 if (!canReply) return;
+
                 setThreads((prev) => toggleReactionInThreads(prev, messageId, node.id, r.emoji));
                 void toggleChannelReaction(messageId, node.id, r.emoji).then((res) => {
                   if (res.success) return;

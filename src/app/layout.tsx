@@ -66,7 +66,7 @@ export default function RootLayout({
           <Toaster />
         </ThemeProvider>
 
-        <div className="pointer-events-none fixed inset-0 z-99 h-full w-full overflow-hidden bg-[url(/assets/noise.png)] opacity-30 dark:opacity-[0.17]" />
+        <div className="pointer-events-none fixed inset-0 z-99 h-full w-full overflow-hidden bg-[url(/assets/noise.png)] opacity-20 sm:opacity-30 dark:opacity-[0.12]" />
 
         <Analytics />
         <SpeedInsights />

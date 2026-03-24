@@ -33,7 +33,10 @@ function toDate(v: string | Date) {
 function sortThreads(threads: ChannelThread[]) {
   return [...threads].sort((a, b) => {
     if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
-    return b.createdAt.getTime() - a.createdAt.getTime();
+
+    const dt = b.createdAt.getTime() - a.createdAt.getTime();
+    if (dt !== 0) return dt;
+    return b.id - a.id;
   });
 }
 
@@ -78,8 +81,54 @@ function deleteThreadById(threads: ChannelThread[], id: number): ChannelThread[]
 
 function insertSortedByCreatedAt(list: ChannelCommentNode[], node: ChannelCommentNode) {
   const next = [...list, node];
-  next.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  next.sort((a, b) => {
+    const dt = a.createdAt.getTime() - b.createdAt.getTime();
+    if (dt !== 0) return dt;
+    return a.id - b.id;
+  });
   return next;
+}
+
+function normalizeCommentRoots(roots: ChannelCommentNode[]): ChannelCommentNode[] {
+  const all: ChannelCommentNode[] = [];
+  const stack = [...roots];
+
+  while (stack.length) {
+    const n = stack.pop();
+    if (!n) continue;
+    all.push(n);
+    for (const r of n.replies ?? []) stack.push(r);
+  }
+
+  const byId = new Map<number, ChannelCommentNode>();
+  for (const n of all) {
+    byId.set(n.id, {
+      ...n,
+      createdAt: toDate(n.createdAt as unknown as string | Date),
+      replies: [],
+    });
+  }
+
+  const nextRoots: ChannelCommentNode[] = [];
+  for (const n of byId.values()) {
+    if (n.parentId && byId.has(n.parentId)) {
+      byId.get(n.parentId)!.replies.push(n);
+    } else {
+      nextRoots.push(n);
+    }
+  }
+
+  const sortDeep = (nodes: ChannelCommentNode[]) => {
+    nodes.sort((a, b) => {
+      const dt = a.createdAt.getTime() - b.createdAt.getTime();
+      if (dt !== 0) return dt;
+      return a.id - b.id;
+    });
+    for (const n of nodes) sortDeep(n.replies);
+  };
+
+  sortDeep(nextRoots);
+  return nextRoots;
 }
 
 function upsertCommentInTree(
@@ -152,7 +201,7 @@ function upsertCommentFromRow(threads: ChannelThread[], row: ChannelCommentRow):
 
     return {
       ...t,
-      comments: res.next,
+      comments: normalizeCommentRoots(res.next),
     };
   });
 }
@@ -197,11 +246,9 @@ function deleteCommentById(
     const res = removeCommentFromTree(cloned, commentId);
     if (!res.removed) return t;
 
-    const sorted = [...res.next].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-
     return {
       ...t,
-      comments: sorted,
+      comments: normalizeCommentRoots(res.next),
     };
   });
 }

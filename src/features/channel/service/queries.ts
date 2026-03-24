@@ -20,7 +20,11 @@ export async function getChannelThreads(): Promise<ChannelThread[]> {
     })
     .from(channelMessages)
     .limit(100)
-    .orderBy(desc(channelMessages.isPinned), desc(channelMessages.createdAt));
+    .orderBy(
+      desc(channelMessages.isPinned),
+      desc(channelMessages.createdAt),
+      desc(channelMessages.id),
+    );
 
   const messageIds = messages.map((m) => m.id);
   if (!messageIds.length) return [];
@@ -37,7 +41,7 @@ export async function getChannelThreads(): Promise<ChannelThread[]> {
     })
     .from(channelComments)
     .where(inArray(channelComments.messageId, messageIds))
-    .orderBy(asc(channelComments.createdAt));
+    .orderBy(asc(channelComments.createdAt), asc(channelComments.id));
 
   const commentsByMessageId = new Map<number, ChannelComment[]>();
   for (const c of comments) {

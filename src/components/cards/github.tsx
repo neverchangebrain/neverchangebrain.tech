@@ -1,0 +1,93 @@
+'use client';
+
+import { contributionsColorMap } from '@/constants/cards';
+import { defaultVariantsNoDelay } from '@/constants/motion-variants';
+import { networking } from '@/constants/profile';
+import type { GithubContributions } from '@/features/github/model/types';
+import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
+import { Github } from 'lucide-react';
+import Link from 'next/link';
+
+const MotionLink = motion.create(Link);
+
+export function GithubStatsCard({
+  followers,
+  stars,
+  contributions,
+}: {
+  followers: number;
+  stars: number;
+  contributions: GithubContributions;
+}) {
+  return (
+    <MotionLink
+      href={`https://github.com/${networking.github}`}
+      target="_blank"
+      variants={defaultVariantsNoDelay}
+      whileHover={{ scale: 1.05 }}
+      className="card-border relative col-span-4 row-span-2 overflow-hidden rounded-xl bg-white p-4 md:col-span-3 md:col-start-3 md:row-span-2 md:row-start-1 dark:bg-neutral-900"
+    >
+      <div className="relative z-10 flex h-full flex-col justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Github className="size-4.5" />
+          <h2 className="text-sm font-light">Stats</h2>
+        </div>
+
+        <div className="flex flex-wrap items-end gap-4">
+          <GithubStatItem label="Followers" value={followers} />
+          <GithubStatItem label="Stars" value={stars} />
+          <GithubStatItem label="Contributions" value={contributions.totalContributions} />
+        </div>
+      </div>
+
+      <ContributionsGraph contributions={contributions} />
+    </MotionLink>
+  );
+}
+
+function GithubStatItem({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="col-span-1 flex flex-col items-start">
+      <p className="text-lg font-semibold text-neutral-700 dark:text-white">{value}</p>
+      <p className="text-xs text-neutral-500 dark:text-neutral-400">{label}</p>
+    </div>
+  );
+}
+
+function ContributionsGraph({ contributions }: { contributions: GithubContributions }) {
+  return (
+    <div className="absolute inset-y-0 right-0 z-0 flex max-h-full gap-1 overflow-hidden opacity-50">
+      <div className="absolute inset-0 bg-linear-to-t from-neutral-50 via-neutral-50/50 to-neutral-50/50 dark:from-neutral-950/95 dark:via-neutral-950/65 dark:to-transparent" />
+      {contributions.latestContributions.map((week, weekIndex) => {
+        const paddedDays = Array.from({ length: 7 }, (_, dayIndex) => {
+          return (
+            week.contributionDays[dayIndex] ?? {
+              color: '',
+              contributionCount: 0,
+              date: '',
+            }
+          );
+        });
+        return (
+          <div
+            key={`contributions-week-${weekIndex}`}
+            className="flex aspect-1/8 size-full flex-col gap-1"
+          >
+            {paddedDays.map((day, dayIndex) => {
+              return (
+                <div
+                  key={`contribution-week-${weekIndex}-day-${day.date || dayIndex}`}
+                  className={cn(
+                    'flex aspect-square rounded-[3px]',
+                    contributionsColorMap[day.color],
+                  )}
+                />
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}

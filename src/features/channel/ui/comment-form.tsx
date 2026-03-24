@@ -20,9 +20,13 @@ const initialState: FormState = {
 export function ChannelCommentForm({
   messageId,
   parentCommentId,
+  placeholder,
+  autoFocus,
 }: {
   messageId: number;
   parentCommentId?: number | null;
+  placeholder?: string;
+  autoFocus?: boolean;
 }) {
   const ref = React.useRef<HTMLFormElement>(null);
   const [state, action] = React.useActionState<FormState, FormData>(formAction, initialState);
@@ -40,10 +44,11 @@ export function ChannelCommentForm({
           id={`entry-${messageId}`}
           name="entry"
           type="text"
-          placeholder="write a comment"
+          placeholder={placeholder ?? 'write a comment'}
           minLength={2}
           maxLength={500}
           required
+          autoFocus={autoFocus}
           className={cn({
             'border-red-300': !state.success && state.message,
           })}

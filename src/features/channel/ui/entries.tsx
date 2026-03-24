@@ -53,6 +53,10 @@ export function ChannelEntry({ entry, className, canComment }: EntryProps) {
   const { email, body, createdBy, createdAt, isPinned, commentsClosed, comments } = entry;
   const isOwner = email === networking.email;
 
+  const [activeReplyTarget, setActiveReplyTarget] = React.useState<
+    { kind: 'post' } | { kind: 'comment'; id: number } | null
+  >(null);
+
   const daysSinceEntry = differenceInDays(new Date(), createdAt);
   const timeSinceEntry =
     daysSinceEntry > 1
@@ -93,7 +97,18 @@ export function ChannelEntry({ entry, className, canComment }: EntryProps) {
           {timeSinceEntry}
         </span>
       </div>
-      <p className="text-pretty wrap-break-word">{body}</p>
+      <p
+        className={cn(
+          'text-pretty wrap-break-word',
+          canComment && !commentsClosed && 'cursor-pointer',
+        )}
+        onClick={() => {
+          if (!canComment || commentsClosed) return;
+          setActiveReplyTarget((prev) => (prev?.kind === 'post' ? null : { kind: 'post' }));
+        }}
+      >
+        {body}
+      </p>
 
       {(comments.length > 0 || canComment) && (
         <div className="mt-2 border-t border-white/5 pt-3">
@@ -107,12 +122,16 @@ export function ChannelEntry({ entry, className, canComment }: EntryProps) {
                   canReply={canComment}
                   commentsClosed={commentsClosed}
                   depth={0}
+                  activeReplyTarget={activeReplyTarget}
+                  setActiveReplyTarget={setActiveReplyTarget}
                 />
               ))}
             </div>
           )}
 
-          {canComment && !commentsClosed && <ChannelCommentForm messageId={entry.id} />}
+          {canComment && !commentsClosed && activeReplyTarget?.kind === 'post' && (
+            <ChannelCommentForm messageId={entry.id} placeholder="write a comment" autoFocus />
+          )}
         </div>
       )}
     </motion.div>
@@ -125,16 +144,22 @@ function ChannelCommentNodeView({
   canReply,
   commentsClosed,
   depth,
+  activeReplyTarget,
+  setActiveReplyTarget,
 }: {
   node: ChannelCommentNode;
   messageId: number;
   canReply: boolean;
   commentsClosed: boolean;
   depth: number;
+  activeReplyTarget: { kind: 'post' } | { kind: 'comment'; id: number } | null;
+  setActiveReplyTarget: React.Dispatch<
+    React.SetStateAction<{ kind: 'post' } | { kind: 'comment'; id: number } | null>
+  >;
 }) {
-  const [isReplying, setIsReplying] = React.useState(false);
   const hasReplies = node.replies.length > 0;
   const clampedDepth = Math.min(depth, 6);
+  const isActive = activeReplyTarget?.kind === 'comment' && activeReplyTarget.id === node.id;
 
   return (
     <div
@@ -143,7 +168,20 @@ function ChannelCommentNodeView({
         marginLeft: clampedDepth * 12,
       }}
     >
-      <div className="rounded-xl bg-neutral-200/10 px-3 py-2 text-xs leading-5 dark:bg-neutral-900/10">
+      <div
+        className={cn(
+          'rounded-xl bg-neutral-200/10 px-3 py-2 text-xs leading-5 dark:bg-neutral-900/10',
+          canReply && !commentsClosed && 'cursor-pointer',
+        )}
+        onClick={() => {
+          if (!canReply || commentsClosed) return;
+          setActiveReplyTarget((prev) =>
+            prev?.kind === 'comment' && prev.id === node.id
+              ? null
+              : { kind: 'comment', id: node.id },
+          );
+        }}
+      >
         <div className="flex items-center justify-between gap-3">
           <span className="text-neutral-500 dark:text-neutral-400">{node.createdBy}</span>
           <span className="text-neutral-500 dark:text-neutral-400">
@@ -153,21 +191,16 @@ function ChannelCommentNodeView({
           </span>
         </div>
         <p className="wrap-break-word">{node.body}</p>
-
-        {canReply && !commentsClosed && (
-          <button
-            type="button"
-            onClick={() => setIsReplying((v) => !v)}
-            className="mt-2 text-xs text-neutral-500 hover:text-neutral-400 dark:text-neutral-400 dark:hover:text-neutral-300"
-          >
-            reply
-          </button>
-        )}
-
-        {isReplying && canReply && !commentsClosed && (
-          <ChannelCommentForm messageId={messageId} parentCommentId={node.id} />
-        )}
       </div>
+
+      {isActive && canReply && !commentsClosed && (
+        <ChannelCommentForm
+          messageId={messageId}
+          parentCommentId={node.id}
+          placeholder="write a reply"
+          autoFocus
+        />
+      )}
 
       {hasReplies && (
         <div className="space-y-2">
@@ -179,6 +212,8 @@ function ChannelCommentNodeView({
               canReply={canReply}
               commentsClosed={commentsClosed}
               depth={depth + 1}
+              activeReplyTarget={activeReplyTarget}
+              setActiveReplyTarget={setActiveReplyTarget}
             />
           ))}
         </div>

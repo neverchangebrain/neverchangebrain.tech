@@ -1,3 +1,5 @@
+import type { NextRequest } from 'next/server';
+
 export const runtime = 'nodejs';
 
 const REVALIDATE_SECONDS = 60 * 60;
@@ -47,8 +49,14 @@ async function readLocalSchema(relPath: string) {
   }
 }
 
-export async function GET(request: Request, context: { params: { schema?: string[] | string } }) {
-  const relPath = getSchemaRelPath(context.params.schema);
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ schema: string[] }> },
+) {
+  void request;
+
+  const { schema } = await context.params;
+  const relPath = getSchemaRelPath(schema);
   if (!relPath) return new Response('Bad Request', { status: 400, headers: cacheHeaders });
 
   const local = await readLocalSchema(relPath);
